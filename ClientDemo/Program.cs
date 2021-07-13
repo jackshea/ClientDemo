@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Threading.Tasks;
+using SomeSample;
 
 namespace ClientDemo
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            await TestClient.Run(args);
+            Console.ReadLine();
         }
     }
 }
