@@ -27,9 +27,9 @@ namespace SomeSample
                     await Task.Delay(1000);
                 }
 
-                var spend = DateTime.Now - start;
-                Console.WriteLine($"发送{count}条数据，用时{spend.TotalMilliseconds:F2} 毫秒");
-                Console.WriteLine($"每条数据用时{spend.TotalMilliseconds / count:F2} 毫秒");
+                //var spend = DateTime.Now - start;
+                //Console.WriteLine($"发送{count}条数据，用时{spend.TotalMilliseconds:F2} 毫秒");
+                //Console.WriteLine($"每条数据用时{spend.TotalMilliseconds / count:F2} 毫秒");
                 //byte[] bytes = ArrayPool<byte>.Shared.Rent(1024); 
                 //Console.WriteLine($"CanRead = {ns.CanRead}");
                 //int bytesRead = ns.Read(bytes, 0, bytes.Length);
