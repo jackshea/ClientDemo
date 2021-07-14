@@ -1,4 +1,5 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -24,11 +25,11 @@ namespace ClientDemo
             ns = client.GetStream();
         }
 
-        public void Close()
+        public async Task Close()
         {
-            StopReceiveMessage();
+            await ns.FlushAsync();
+            await TryReceiveMessage();
             messageHandlers.Clear();
-            ns.Flush();
             ns.Close();
             client.Close();
         }
@@ -37,6 +38,7 @@ namespace ClientDemo
         {
             await ns.WriteAsync(bytes, offset, length);
         }
+
 
         public async Task<byte[]> ReadMessage()
         {
@@ -74,7 +76,7 @@ namespace ClientDemo
             }
         }
 
-        public async void StartReceiveMessage(int intervalMs)
+        public async Task StartReceiveMessage(int intervalMs)
         {
             isStopRead = false;
             while (!isStopRead)
