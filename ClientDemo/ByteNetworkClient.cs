@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ClientDemo
@@ -39,6 +40,14 @@ namespace ClientDemo
             await ns.WriteAsync(bytes, offset, length);
         }
 
+        public async Task SetMessage(string message)
+        {
+            Console.Write("发送消息：" + message);
+            var bytes = ArrayPool<byte>.Shared.Rent(1027);
+            var length = Encoding.UTF8.GetBytes(message, bytes);
+            await SentMessage(bytes, 0, length);
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
 
         public async Task<byte[]> ReadMessage()
         {
