@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,12 +19,29 @@ namespace ClientDemo
         {
             client = new TcpClient();
             messageHandlers = new List<IMessageHandler>();
+            client.Client.IOControl(IOControlCode.KeepAliveValues, GetKeepAliveData(), null);
+            client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+        }
+
+        private byte[] GetKeepAliveData()
+        {
+            uint dummy = 0;
+            byte[] inOptionValues = new byte[Marshal.SizeOf(dummy) * 3];
+            BitConverter.GetBytes((uint)1).CopyTo(inOptionValues, 0);
+            BitConverter.GetBytes((uint)3000).CopyTo(inOptionValues, Marshal.SizeOf(dummy));//keep-alive间隔
+            BitConverter.GetBytes((uint)500).CopyTo(inOptionValues, Marshal.SizeOf(dummy) * 2);// 尝试间隔
+            return inOptionValues;
         }
 
         public async Task Connect(string host, int port)
         {
             await client.ConnectAsync(host, port);
             ns = client.GetStream();
+        }
+
+        public bool IsConnected()
+        {
+            return client.Connected;
         }
 
         public async Task Close()

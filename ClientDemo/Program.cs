@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,6 +10,16 @@ namespace ClientDemo
     {
         static async Task Main(string[] args)
         {
+            //var clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
+            //Console.WriteLine("Connecting to port 10086");
+
+            //clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 10086));
+            //var stream = new NetworkStream(clientSocket);
+            //Console.InputEncoding = Encoding.UTF8;
+            //Console.OutputEncoding = Encoding.UTF8;
+            //await Console.OpenStandardInput().CopyToAsync(stream);
+
             await OneClientTest();
             Console.ReadLine();
         }
