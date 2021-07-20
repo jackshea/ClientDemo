@@ -8,8 +8,8 @@ namespace SomeSample
 {
     public class TestClient
     {
-        private const int portNum = 10086;
-        private const string hostName = "localhost";
+        private const int portNum = 10087;
+        private const string hostName = "10.0.0.202";
 
         public static async Task<int> Run(String[] args)
         {

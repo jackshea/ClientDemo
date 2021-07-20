@@ -58,7 +58,7 @@ namespace ClientDemo
             await ns.WriteAsync(bytes, offset, length);
         }
 
-        public async Task SetMessage(string message)
+        public async Task SentMessage(string message)
         {
             Console.Write("发送消息：" + message);
             var bytes = ArrayPool<byte>.Shared.Rent(1027);
