@@ -2,7 +2,11 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using HelloWorld;
+using MessagePack;
 
 namespace ClientDemo
 {
@@ -20,7 +24,28 @@ namespace ClientDemo
             //Console.OutputEncoding = Encoding.UTF8;
             //await Console.OpenStandardInput().CopyToAsync(stream);
 
-            await OneClientTest();
+            var client = new NetworkClient();
+            await client.Connect("127.0.0.1", 10087);
+            var user = new User
+            {
+                Age = 10,
+                FirstName = "Jack",
+                LastName = "Shea",
+                Address = new Address
+                {
+                    City = "Xiamen",
+                    Country = "China",
+                    State = "Fujian"
+                }
+            };
+            await client.SentMessage(user);
+            var user1 = await client.ReceiveMessage<User>();
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                IncludeFields = true
+            };
+            Console.WriteLine(JsonSerializer.Serialize(user1, options));
             Console.ReadLine();
         }
 
