@@ -1,6 +1,6 @@
 ﻿using MessagePack;
 
-namespace HelloWorld
+namespace Message
 {
     [MessagePackObject]
     public class User

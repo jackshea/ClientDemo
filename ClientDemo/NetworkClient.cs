@@ -1,11 +1,10 @@
-﻿using MessagePack;
-using System;
+﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
+using Common;
 
 namespace ClientDemo
 {
@@ -16,12 +15,14 @@ namespace ClientDemo
         private BufferedStream bs;
         private List<IMessageHandler> messageHandlers;
         private bool isStopRead;
-        //private MemoryStream ms;
+        private BinaryWriter binWriter;
+        private BinaryReader binReader;
+        private MessageCoder coder = new MessageCoder();
+
         public NetworkClient()
         {
             client = new TcpClient();
             messageHandlers = new List<IMessageHandler>();
-            //ms = new MemoryStream();
         }
 
         public async Task Connect(string host, int port)
@@ -30,6 +31,8 @@ namespace ClientDemo
 
             ns = client.GetStream();
             bs = new BufferedStream(ns);
+            binWriter = new BinaryWriter(bs);
+            binReader = new BinaryReader(bs);
         }
 
         public bool IsConnected()
@@ -44,35 +47,23 @@ namespace ClientDemo
             messageHandlers.Clear();
             bs.Close();
             ns.Close();
+            binWriter.Close();
+            binReader.Close();
             client.Close();
         }
 
-        public async Task SentMessage<T>(T msg)
+        public async Task<int> SentMessage<T>(T msg)
         {
-            bs.Write(BitConverter.GetBytes(123456));
-            await MessagePackSerializer.SerializeAsync(bs, msg);
-            await bs.FlushAsync();
+            var msgLength = coder.Encoder(binWriter, msg);
+            binWriter.Flush();
+            return await Task.FromResult(msgLength);
         }
 
-        public async Task<T> ReceiveMessage<T>()
+        public object ReceiveMessage(out Type type)
         {
-            var bytes = ArrayPool<byte>.Shared.Rent(1024);
-            //ns.Read(bytes, 0, 1024);
-            //int msgType = BitConverter.ToInt32(bytes);
-
-            //ns.Seek(0, SeekOrigin.Begin);
-            T mesBody = default;
-            try
-            {
-                mesBody = MessagePackSerializer.Deserialize<T>(ns);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-            ArrayPool<byte>.Shared.Return(bytes);
-            return await Task.FromResult(mesBody);
+            var msg = coder.Decoder(binReader, out var mgsType);
+            type = mgsType;
+            return msg;
         }
 
         public async Task<byte[]> ReadMessage()

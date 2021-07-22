@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using HelloWorld;
+using Message;
 using MessagePack;
 
 namespace ClientDemo
@@ -39,7 +39,7 @@ namespace ClientDemo
                 }
             };
             await client.SentMessage(user);
-            var user1 = await client.ReceiveMessage<User>();
+            var user1 = client.ReceiveMessage(out var type);
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,
