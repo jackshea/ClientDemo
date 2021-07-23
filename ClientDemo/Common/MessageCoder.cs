@@ -16,16 +16,17 @@ namespace Common
             bw.Write(msgLength);
             bw.Write(msgTypeId);
             bw.Write(msgBodyBytes);
-            return msgLength;
+            return msgLength + sizeof(int);
         }
 
-        public object Decode(BinaryReader br, out Type type)
+        public int Decode(BinaryReader br, out Type type, out object message)
         {
             var msgLength = br.ReadInt32();
             var msgTypeId = br.ReadInt32();
             var msgBody = br.ReadBytes(msgLength - SizeOfMsgType);
             type = MessageIdMapper.Instance.GetType(msgTypeId);
-            return MessagePackSerializer.Deserialize(type, msgBody);
+            message = MessagePackSerializer.Deserialize(type, msgBody);
+            return msgLength + sizeof(int);
         }
     }
 }

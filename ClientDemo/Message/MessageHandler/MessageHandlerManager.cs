@@ -22,6 +22,7 @@ namespace Message
         public void Init()
         {
             Add(typeof(User), new UserMsgHandler());
+            Add(typeof(Hello), new HelloMsgHandler());
         }
 
         public void Process<T>(T msg)

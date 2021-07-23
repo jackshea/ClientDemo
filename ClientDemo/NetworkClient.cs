@@ -19,6 +19,7 @@ namespace ClientDemo
         private BinaryReader binReader;
         private MessageCoder coder = new MessageCoder();
         private MessageHandlerManager messageHandlerManager;
+        private DateTime lastAlive;
 
         public NetworkClient()
         {
@@ -55,16 +56,26 @@ namespace ClientDemo
             client.Close();
         }
 
-        public async Task<int> SentMessage<T>(T msg)
+        public async Task<int> SentMessage<T>(T msg, bool autoFlush = true)
         {
             var msgLength = coder.Encode(binWriter, msg);
-            binWriter.Flush();
+            if (autoFlush)
+            {
+                binWriter.Flush();
+            }
+
+            lastAlive = DateTime.Now;
             return await Task.FromResult(msgLength);
+        }
+
+        public async Task FlushAsync()
+        {
+            await ns.FlushAsync();
         }
 
         public object ReceiveMessage(out Type type)
         {
-            var msg = coder.Decode(binReader, out var mgsType);
+            coder.Decode(binReader, out var mgsType, out var msg);
             type = mgsType;
             return msg;
         }
@@ -82,15 +93,14 @@ namespace ClientDemo
 
         public async Task TryReceiveMessage()
         {
-            Console.WriteLine($"client.Available 1 = {client.Available}");
-            while(client.Available > 0)
+            var available = client.Available;
+            Console.WriteLine($"client.Available = {client.Available}");
+            while (available > 0)
             {
-                var length = client.Available;
-                var bytes = ArrayPool<byte>.Shared.Rent(length);
-                var msg = coder.Decode(binReader, out var msgType);
+                available -= coder.Decode(binReader, out var msgType, out var msg);
                 messageHandlerManager.Dispatch(msgType, msg);
-                ArrayPool<byte>.Shared.Return(bytes);
-                Console.WriteLine($"client.Available 2= {client.Available}");
+                lastAlive = DateTime.Now;
+                Console.WriteLine($"available = {available}");
             }
             await Task.CompletedTask;
         }
@@ -105,8 +115,13 @@ namespace ClientDemo
             }
         }
 
-        public void StopReceiveMessage()
+        public async Task TryStopReceiveMessage(double idleTime)
         {
+            while ((DateTime.Now - lastAlive).TotalSeconds < idleTime)
+            {
+                await Task.Delay(100);
+            }
+
             isStopRead = true;
         }
     }
