@@ -3,6 +3,7 @@ using Message;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Infrastructure;
 
 namespace ClientDemo
 {
@@ -36,7 +37,8 @@ namespace ClientDemo
             await client.SentMessage(user);
             var random = new Random(0);
             var startReceiveMessage = client.StartReceiveMessage(100);
-            for (int i = 0; i < 1000; i++)
+            var spendTimer = new SpendTimer("发送网络消息");
+            for (int i = 0; i < 100000; i++)
             {
                 user.Age = i;
                 await client.SentMessage(user, false);
@@ -47,8 +49,10 @@ namespace ClientDemo
                 //await Task.Delay(1);
             }
             await client.FlushAsync();
+            spendTimer.ShowSpend("发送完成");
             await client.TryStopReceiveMessage(1);
             await startReceiveMessage;
+            spendTimer.ShowSpend("停止接收");
             await client.Close();
         }
     }
