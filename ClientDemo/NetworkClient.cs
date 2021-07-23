@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Common;
+using Message;
+using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Common;
 
 namespace ClientDemo
 {
@@ -12,17 +12,19 @@ namespace ClientDemo
     {
         private TcpClient client;
         private NetworkStream ns;
-        private BufferedStream bs;
-        private List<IMessageHandler> messageHandlers;
+        private BufferedStream bufferWriter;
+        private BufferedStream bufferRead;
         private bool isStopRead;
         private BinaryWriter binWriter;
         private BinaryReader binReader;
         private MessageCoder coder = new MessageCoder();
+        private MessageHandlerManager messageHandlerManager;
 
         public NetworkClient()
         {
             client = new TcpClient();
-            messageHandlers = new List<IMessageHandler>();
+            messageHandlerManager = new MessageHandlerManager();
+            messageHandlerManager.Init();
         }
 
         public async Task Connect(string host, int port)
@@ -30,9 +32,10 @@ namespace ClientDemo
             await client.ConnectAsync(host, port);
 
             ns = client.GetStream();
-            bs = new BufferedStream(ns);
-            binWriter = new BinaryWriter(bs);
-            binReader = new BinaryReader(bs);
+            bufferWriter = new BufferedStream(ns, 65536);
+            bufferRead = new BufferedStream(ns, 65536);
+            binWriter = new BinaryWriter(bufferWriter);
+            binReader = new BinaryReader(bufferRead);
         }
 
         public bool IsConnected()
@@ -44,24 +47,24 @@ namespace ClientDemo
         {
             await ns.FlushAsync();
             await TryReceiveMessage();
-            messageHandlers.Clear();
-            bs.Close();
-            ns.Close();
-            binWriter.Close();
             binReader.Close();
+            binWriter.Close();
+            bufferRead.Close();
+            bufferWriter.Close();
+            ns.Close();
             client.Close();
         }
 
         public async Task<int> SentMessage<T>(T msg)
         {
-            var msgLength = coder.Encoder(binWriter, msg);
+            var msgLength = coder.Encode(binWriter, msg);
             binWriter.Flush();
             return await Task.FromResult(msgLength);
         }
 
         public object ReceiveMessage(out Type type)
         {
-            var msg = coder.Decoder(binReader, out var mgsType);
+            var msg = coder.Decode(binReader, out var mgsType);
             type = mgsType;
             return msg;
         }
@@ -77,29 +80,19 @@ namespace ClientDemo
             return new byte[0];
         }
 
-        public void RegisterMessageHandler(IMessageHandler messageHandler)
-        {
-            messageHandlers.Add(messageHandler);
-        }
-
-        public void UnregisterMessageHandler(IMessageHandler messageHandler)
-        {
-            messageHandlers.Remove(messageHandler);
-        }
-
         public async Task TryReceiveMessage()
         {
-            if (client.Available > 0)
+            Console.WriteLine($"client.Available 1 = {client.Available}");
+            while(client.Available > 0)
             {
                 var length = client.Available;
                 var bytes = ArrayPool<byte>.Shared.Rent(length);
-                await ns.ReadAsync(bytes);
-                foreach (var messageHandler in messageHandlers)
-                {
-                    messageHandler.OnMessageReceived(bytes, 0, length);
-                }
+                var msg = coder.Decode(binReader, out var msgType);
+                messageHandlerManager.Dispatch(msgType, msg);
                 ArrayPool<byte>.Shared.Return(bytes);
+                Console.WriteLine($"client.Available 2= {client.Available}");
             }
+            await Task.CompletedTask;
         }
 
         public async Task StartReceiveMessage(int intervalMs)

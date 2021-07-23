@@ -2,6 +2,7 @@
 
 namespace Message
 {
+    [MessageId(123456)]
     [MessagePackObject]
     public class User
     {
@@ -30,11 +31,11 @@ namespace Message
     public class Address
     {
         [Key(0)]
-        public string Country;
+        public string Country { get; set; }
         [Key(1)]
-        public string State;
+        public string State { get; set; }
         [Key(2)]
-        public string City;
+        public string City { get; set; }
     }
 
 }

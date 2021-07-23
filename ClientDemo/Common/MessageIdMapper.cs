@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Message;
+using System;
 using System.Collections.Generic;
-using Message;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 
 namespace Common
 {
@@ -13,10 +16,40 @@ namespace Common
 
         private MessageIdMapper()
         {
-            AddMap(123456,typeof(User));
+            AddMapper(123456, typeof(User));
         }
 
-        public void AddMap(int id, Type type)
+        public void Init(Assembly asm)
+        {
+            var types = asm.GetTypes();
+            StringBuilder log = new StringBuilder();
+            foreach (var type in types)
+            {
+                var attributes = type.GetCustomAttributes(typeof(MessageIdAttribute));
+                if (!attributes.Any())
+                {
+                    continue;
+                }
+
+                if (!type.IsClass)
+                {
+                    continue;
+                }
+
+                foreach (var attribute in attributes)
+                {
+                    if (attribute is MessageIdAttribute msgId)
+                    {
+                        var id = msgId.Id;
+                        AddMapper(id, type);
+                        log.AppendLine($"\tid ={id},Type={type}");
+                    }
+                }
+            }
+            Console.WriteLine("MessageIdMapper:\n" + log);
+        }
+
+        public void AddMapper(int id, Type type)
         {
             id2Type[id] = type;
             type2Id[type] = id;
