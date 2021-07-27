@@ -19,10 +19,22 @@ namespace Message
             dic.Add(type, messageHandler);
         }
 
-        public void Init()
+        public void Init(Assembly asm)
         {
-            Add(typeof(User), new UserMsgHandler());
-            Add(typeof(Hello), new HelloMsgHandler());
+            var types = asm.GetTypes();
+            foreach (var type in types)
+            {
+                foreach (var @interface in type.GetInterfaces())
+                {
+                    if (@interface.Name == typeof(IMessageHandler<>).Name)
+                    {
+                        Console.WriteLine(type.FullName);
+                        var genericType = @interface.GenericTypeArguments[0];
+                        object instance = Activator.CreateInstance(type);
+                        Add(genericType, instance);
+                    }
+                }
+            }
         }
 
         public void Process<T>(T msg)

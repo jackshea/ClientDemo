@@ -3,6 +3,7 @@ using Message;
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace ClientDemo
@@ -22,7 +23,7 @@ namespace ClientDemo
         {
             client = new TcpClient();
             messageHandlerManager = new MessageHandlerManager();
-            messageHandlerManager.Init();
+            messageHandlerManager.Init(Assembly.GetExecutingAssembly());
         }
 
         public async Task Connect(string host, int port)
@@ -92,21 +93,6 @@ namespace ClientDemo
                 available -= coder.Decode(binReader, out var msgType, out var msg);
                 messageHandlerManager.Dispatch(msgType, msg);
                 lastAlive = DateTime.Now;
-            }
-            await Task.CompletedTask;
-        }
-
-        public async Task TryReceiveAllMessage()
-        {
-            var available = client.Available;
-            Console.WriteLine($"client.Available1 = {client.Available}");
-            while (available > 0)
-            {
-                available -= coder.Decode(binReader, out var msgType, out var msg);
-                messageHandlerManager.Dispatch(msgType, msg);
-                lastAlive = DateTime.Now;
-                Console.WriteLine($"available = {available}");
-                Console.WriteLine($"client.Available2 = {client.Available}");
             }
             await Task.CompletedTask;
         }
