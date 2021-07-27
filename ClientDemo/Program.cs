@@ -1,6 +1,7 @@
 ﻿using Common;
 using Message;
 using System;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
 using Infrastructure;
@@ -11,6 +12,7 @@ namespace ClientDemo
 {
     class Program
     {
+        private static ILogger log = LogManager.GetCurrentClassLogger();
         static async Task Main(string[] args)
         {
             var startTime = DateTime.Now.ToString("s");
@@ -18,7 +20,15 @@ namespace ClientDemo
             var log = LogManager.GetCurrentClassLogger();
             log.Info("init Main.");
             MessageIdMapper.Instance.Init(Assembly.GetExecutingAssembly());
-            await OneClientTest();
+            try
+            {
+                await OneClientTest();
+            }
+            catch (Exception e)
+            {
+                log.Error(e);
+            }
+
             Console.ReadLine();
         }
 
@@ -26,7 +36,11 @@ namespace ClientDemo
         {
             var client = new NetworkClient();
             await client.Connect("127.0.0.1", 10087);
-
+            if (!client.IsConnected())
+            {
+                log.Error("无法接连到服务器！");
+                return;
+            }
             var user = new User
             {
                 Age = 10,
@@ -52,7 +66,7 @@ namespace ClientDemo
                 {
                     Greeting = $"Hello {i}, random = {random.Next(int.MaxValue)}"
                 });
-                //await Task.Delay(1);
+                await Task.Delay(100);
             }
             await client.FlushAsync();
             spendTimer.ShowSpend("发送完成");

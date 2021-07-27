@@ -5,11 +5,13 @@ using System.IO;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
+using NLog;
 
 namespace ClientDemo
 {
     public class NetworkClient
     {
+        private static ILogger log = LogManager.GetCurrentClassLogger();
         private TcpClient client;
         private NetworkStream ns;
         private bool isStopRead;
@@ -28,11 +30,17 @@ namespace ClientDemo
 
         public async Task Connect(string host, int port)
         {
-            await client.ConnectAsync(host, port);
-
-            ns = client.GetStream();
-            binWriter = new BinaryWriter(ns);
-            binReader = new BinaryReader(ns);
+            try
+            {
+                await client.ConnectAsync(host, port);
+                ns = client.GetStream();
+                binWriter = new BinaryWriter(ns);
+                binReader = new BinaryReader(ns);
+            }
+            catch (Exception e)
+            {
+                log.Fatal(e);
+            }
         }
 
         public bool IsConnected()
