@@ -32,6 +32,7 @@ namespace Message
                         var genericType = @interface.GenericTypeArguments[0];
                         object instance = Activator.CreateInstance(type);
                         Add(genericType, instance);
+                        break;
                     }
                 }
             }
