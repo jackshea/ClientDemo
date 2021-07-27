@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Message;
 
-namespace Message
+namespace Common
 {
     public class MessageHandlerManager
     {
