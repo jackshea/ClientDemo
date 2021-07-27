@@ -1,9 +1,11 @@
 ﻿using System;
+using NLog;
 
 namespace Infrastructure
 {
     public class SpendTimer
     {
+        private static ILogger log = LogManager.GetCurrentClassLogger();
         public DateTime StartTime { get; private set; }
         public string Name { get; private set; }
 
@@ -20,12 +22,12 @@ namespace Infrastructure
         public void Start(string msg = "")
         {
             StartTime = DateTime.Now;
-            Console.WriteLine($"{Name}开始计时。{msg}");
+            log.Debug($"{Name}开始计时。{msg}");
         }
 
         public void ShowSpend(string msg = "")
         {
-            Console.WriteLine($"{Name}耗时{(DateTime.Now - StartTime).TotalMilliseconds}毫秒。{msg}");
+            log.Debug($"{Name}耗时{(DateTime.Now - StartTime).TotalMilliseconds}毫秒。{msg}");
         }
     }
 }

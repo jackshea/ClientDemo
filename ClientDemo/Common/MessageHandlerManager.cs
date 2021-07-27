@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Message;
+using NLog;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Message;
+using System.Text;
 
 namespace Common
 {
     public class MessageHandlerManager
     {
+        private static ILogger log = LogManager.GetCurrentClassLogger();
         Dictionary<Type, object> dic = new Dictionary<Type, object>();
         private MethodInfo _method;
 
@@ -23,20 +26,23 @@ namespace Common
         public void Init(Assembly asm)
         {
             var types = asm.GetTypes();
+            StringBuilder sb = new StringBuilder();
+
             foreach (var type in types)
             {
                 foreach (var @interface in type.GetInterfaces())
                 {
                     if (@interface.Name == typeof(IMessageHandler<>).Name)
                     {
-                        Console.WriteLine(type.FullName);
                         var genericType = @interface.GenericTypeArguments[0];
+                        sb.AppendLine($"\tmsgType = {genericType.Name}, \thandlerType = {type.Name}");
                         object instance = Activator.CreateInstance(type);
                         Add(genericType, instance);
                         break;
                     }
                 }
             }
+            log.Debug("MessageHandlerManager add type. \n" + sb.ToString());
         }
 
         public void Process<T>(T msg)
@@ -56,6 +62,7 @@ namespace Common
         {
             if (!dic.ContainsKey(type))
             {
+                log.Error($"没有对应类型的消息处理器。 type =" + type.Name);
                 return;
             }
 

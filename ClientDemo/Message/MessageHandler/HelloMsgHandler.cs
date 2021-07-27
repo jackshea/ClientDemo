@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Text.Json;
+using NLog;
 
 namespace Message
 {
     public class HelloMsgHandler : IMessageHandler<Hello>
     {
+        private static ILogger log = LogManager.GetCurrentClassLogger();
         public void Process(Hello message)
         {
-            Console.WriteLine(JsonSerializer.Serialize(message));
+            log.Info(JsonSerializer.Serialize(message));
         }
     }
 }

@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using NLog;
 
 namespace Common
 {
     public class MessageIdMapper
     {
+        private static ILogger log = LogManager.GetCurrentClassLogger();
         public static MessageIdMapper Instance { get; } = new MessageIdMapper();
 
         private Dictionary<int, Type> id2Type = new Dictionary<int, Type>();
@@ -22,7 +24,6 @@ namespace Common
         public void Init(Assembly asm)
         {
             var types = asm.GetTypes();
-            StringBuilder log = new StringBuilder();
             foreach (var type in types)
             {
                 var attributes = type.GetCustomAttributes(typeof(MessageIdAttribute));
@@ -42,11 +43,18 @@ namespace Common
                     {
                         var id = msgId.Id;
                         AddMapper(id, type);
-                        log.AppendLine($"\tid ={id},Type={type}");
                     }
                 }
             }
-            Console.WriteLine("MessageIdMapper:\n" + log);
+
+            StringBuilder sb = new StringBuilder();
+            var ids = id2Type.Keys.ToList();
+            ids.Sort();
+            foreach (var id in ids)
+            {
+                sb.AppendLine($"\tid = {id}, \tType = {id2Type[id]}");
+            }
+            log.Debug("MessageIdMapper:\n" + sb);
         }
 
         public void AddMapper(int id, Type type)

@@ -4,6 +4,8 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Infrastructure;
+using NLog;
+using NLog.LayoutRenderers;
 
 namespace ClientDemo
 {
@@ -11,6 +13,10 @@ namespace ClientDemo
     {
         static async Task Main(string[] args)
         {
+            var startTime = DateTime.Now.ToString("s");
+            LayoutRenderer.Register("startTime", (logEvent) => startTime);
+            var log = LogManager.GetCurrentClassLogger();
+            log.Info("init Main.");
             MessageIdMapper.Instance.Init(Assembly.GetExecutingAssembly());
             await OneClientTest();
             Console.ReadLine();
