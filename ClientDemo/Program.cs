@@ -38,7 +38,7 @@ namespace ClientDemo
             var random = new Random(0);
             var startReceiveMessage = client.StartReceiveMessage(100);
             var spendTimer = new SpendTimer("发送网络消息");
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 user.Age = i;
                 await client.SentMessage(user, false);

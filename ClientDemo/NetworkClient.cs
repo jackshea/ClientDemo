@@ -1,7 +1,6 @@
 ﻿using Common;
 using Message;
 using System;
-using System.Buffers;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -12,8 +11,6 @@ namespace ClientDemo
     {
         private TcpClient client;
         private NetworkStream ns;
-        private BufferedStream bufferWriter;
-        private BufferedStream bufferRead;
         private bool isStopRead;
         private BinaryWriter binWriter;
         private BinaryReader binReader;
@@ -33,10 +30,8 @@ namespace ClientDemo
             await client.ConnectAsync(host, port);
 
             ns = client.GetStream();
-            bufferWriter = new BufferedStream(ns, 65536);
-            bufferRead = new BufferedStream(ns, 65536);
-            binWriter = new BinaryWriter(bufferWriter);
-            binReader = new BinaryReader(bufferRead);
+            binWriter = new BinaryWriter(ns);
+            binReader = new BinaryReader(ns);
         }
 
         public bool IsConnected()
@@ -50,8 +45,6 @@ namespace ClientDemo
             await TryReceiveMessage();
             binReader.Close();
             binWriter.Close();
-            bufferRead.Close();
-            bufferWriter.Close();
             ns.Close();
             client.Close();
         }
@@ -94,13 +87,26 @@ namespace ClientDemo
         public async Task TryReceiveMessage()
         {
             var available = client.Available;
-            Console.WriteLine($"client.Available = {client.Available}");
+            while (available > 0)
+            {
+                available -= coder.Decode(binReader, out var msgType, out var msg);
+                messageHandlerManager.Dispatch(msgType, msg);
+                lastAlive = DateTime.Now;
+            }
+            await Task.CompletedTask;
+        }
+
+        public async Task TryReceiveAllMessage()
+        {
+            var available = client.Available;
+            Console.WriteLine($"client.Available1 = {client.Available}");
             while (available > 0)
             {
                 available -= coder.Decode(binReader, out var msgType, out var msg);
                 messageHandlerManager.Dispatch(msgType, msg);
                 lastAlive = DateTime.Now;
                 Console.WriteLine($"available = {available}");
+                Console.WriteLine($"client.Available2 = {client.Available}");
             }
             await Task.CompletedTask;
         }
