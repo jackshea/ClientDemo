@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using NLog;
 
-namespace ClientDemo
+namespace Client
 {
     public class NetworkClient
     {

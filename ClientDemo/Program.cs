@@ -1,12 +1,12 @@
-﻿using Common;
-using Message;
-using System;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using Client;
+using Common;
 using Infrastructure;
+using Message;
 using NLog;
 using NLog.LayoutRenderers;
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace ClientDemo
 {
